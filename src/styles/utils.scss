@@ -1,0 +1,433 @@
+@import './transition.scss';
+
+body, html, #app{
+    width: 100%;
+    height: 100%;
+}
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+$sizes: (
+    0: 0,
+    xxs: 2px,
+    xs: 4px,
+    s: 8px,
+    m: 16px,
+    l: 24px,
+    xl: 32px,
+    xxl: 40px,
+
+    xxsem: .125em,
+    xsem: .25em,
+    sem: .5em,
+    mem: 1em, // 16px
+    lem: 1.5em,
+    xlem: 2em,
+    xxlem: 2.5em,
+);
+
+@mixin borderColorMixin(){
+    @each $borderKey, $borderColor in (
+        light: var(--border-light, whitesmoke),
+        dark: var(--border-dark, #e9e9e9),
+    ){
+        &.border-#{$borderKey}{
+            &>*{
+                border-color: $borderColor;
+            }
+        }
+    }
+}
+
+@mixin c($name){
+    // 对文件大小影响很大，表示能影响到的子集的nth-child
+    $indexes: (1, 2, 3,);
+    .c#{$name}{
+        &>*{
+            @extend .#{$name};
+        }
+    }
+    .cc#{$name}{
+        &>*>*{
+            @extend .#{$name};
+        }
+    }
+    .ccc#{$name}{
+        &>*>*>*{
+            @extend .#{$name};
+        }
+    }
+    // 用0表示last-child
+    .c0#{$name}{
+        &>*:last-child{
+            @extend .#{$name};
+        }
+    }
+    .cc0#{$name}{
+        &>*>*:last-child{
+            @extend .#{$name};
+        }
+    }
+    .ccc0#{$name}{
+        &>*>*:last-child{
+            @extend .#{$name};
+        }
+    }
+    @each $i in $indexes {
+        .c#{$i}#{$name}{
+            &>*:nth-child(#{$i}){
+                @extend .#{$name};
+            }
+        }
+        .cc#{$i}#{$name}{
+            &>*>*:nth-child(#{$i}){
+                @extend .#{$name};
+            }
+        }
+        .ccc#{$i}#{$name}{
+            &>*>*>*:nth-child(#{$i}){
+                @extend .#{$name};
+            }
+        }
+    }
+}
+
+@each $k, $v in $sizes{
+    // 描述容器的水平排列
+    .h-#{$k}{
+        &>* + *{
+            margin-left: $v;
+        }
+    }
+    // 描述容器的垂直排列
+    .v-#{$k}{
+        &>* + *{
+            margin-top: $v;
+        }
+    }
+
+
+    ._hb-#{$k}{
+        @include borderColorMixin;
+        &>*{
+            border-right: 1px solid #efefef;
+            
+            padding-right: $v;
+            &:last-child{
+                border-right: 0;
+                padding-right: 0;
+            }
+        }
+    }
+    ._vb-#{$k}{
+        @include borderColorMixin;
+        &>*{
+            border-bottom: 1px solid #efefef;
+            padding-bottom: $v;
+
+            &:last-child{
+                border-bottom: 0;
+                padding-bottom: 0;
+            }
+        }
+    }
+
+    // 描述一个有border divider的水平排列容器
+    .hbox-#{$k}{
+        @extend .h;
+        @extend .h-#{$k};
+        @extend ._hb-#{$k};
+    }
+    @include c(hbox-#{$k});
+    .vbox-#{$k}{
+        @extend .v-#{$k};
+        @extend ._vb-#{$k};
+    }
+
+    .p-#{$k}{
+        padding: $v;
+    }
+    .m-#{$k}{
+        margin: $v;
+    }
+}
+@each $k, $v in $sizes{
+    .p-h-#{$k}{
+        padding-left: $v;
+        padding-right: $v;
+    }
+    .p-v-#{$k}{
+        padding-top: $v;
+        padding-bottom: $v;
+    }
+    .m-h-#{$k}{
+        padding-left: $v;
+        padding-right: $v;
+    }
+    .m-v-#{$k}{
+        margin-top: $v;
+        margin-bottom: $v;
+    }
+}
+@each $k, $v in $sizes{
+    .p-t-#{$k}{
+        padding-top: $v;
+    }
+    .p-l-#{$k}{
+        padding-left: $v;
+    }
+    .p-r-#{$k}{
+        padding-right: $v;
+    }
+    .p-b-#{$k}{
+        padding-bottom: $v;
+    }
+    .m-t-#{$k}{
+        margin-top: $v;
+    }
+    .m-l-#{$k}{
+        margin-left: $v;
+    }
+    .m-r-#{$k}{
+        margin-right: $v;
+    }
+    .m-b-#{$k}{
+        margin-bottom: $v;
+    }
+}
+
+.h{
+    display: flex;
+    align-items: center;
+}
+.hinline{
+    display: inline-flex;
+    align-items: center;
+}
+.v{
+    display: flex;
+    flex-direction: column;
+}
+.vinline{
+    display: inline-flex;
+    flex-direction: column;
+}
+
+$overflowValues: (
+    auto, 
+    visible,
+    hidden,
+    scroll,
+    overlay,
+);
+@each $val in $overflowValues{
+    .overflow-#{$val}{
+        overflow: $val !important;
+    }
+}
+
+$flexLength: (0, 1, 2, 3, 4, 5, 6, 7, 8);
+@each $val in $flexLength{
+    .f-#{$val}{
+        flex: $val;
+    }
+    .shrink-#{$val}{
+        flex-shrink: $val!important;
+    }
+    .grow-#{val}{
+        flex-grow: $val!important;
+    }
+}
+
+$sizeLengths: (
+    0: 0px,
+    16: 16px,
+    24: 24px,
+    32: 32px,
+    40: 40px,
+    48: 48px,
+    56: 56px,
+    72: 72px,
+    80: 80px,
+    88: 88px,
+    96: 96px,
+    104: 104px,
+    full: 100%
+);
+@each $key, $val in $sizeLengths{
+    .size-#{$key}{
+        width: #{$val};
+        height: #{$val};
+    }
+}
+@each $key, $val in $sizeLengths{
+    .width-#{$key}{
+        width: #{$val};
+    }
+    .height-#{$key}{
+        height: #{$val};
+    }
+}
+
+$justifyItems: (
+    flex-start,
+    flex-end,
+    center,
+    space-between,
+    space-evenly,
+    space-around,
+);
+@each $val in $justifyItems{
+    .justify-#{$val}{
+        justify-content: $val;
+    }
+}
+$alignItems: (
+    stretch,
+    center,
+    flex-start,
+    flex-end,
+    baseline,
+);
+@each $val in $alignItems{
+    .align-#{$val}{
+        align-items: $val;
+    }
+}
+
+.rel{
+    position: relative;
+
+    .abs{
+        position: absolute;
+    }
+}
+@each $k, $v in $sizes{
+    .r-#{$k}{
+        right: $v
+    }
+    .l-#{$k}{
+        left: $v
+    }
+    .t-#{$k}{
+        top: $v
+    }
+    .b-#{$k}{
+        bottom: $v
+    }
+    .-t-#{$k}{
+        top: -$v
+    }
+    .-b-#{$k}{
+        bottom: -$v
+    }
+    .-l-#{$k}{
+        left: -$v
+    }
+    .-r-#{$k}{
+        right: -$v
+    }
+}
+
+.page{
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+
+    &>&{
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+}
+
+.clickable{
+    cursor: pointer;
+    transition: opacity .3s;
+
+    &:hover{
+        opacity: .75;
+    }
+}
+
+.title{
+    font-weight: bold;
+}
+
+.ellipsis{
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-all;
+    white-space: nowrap;
+}
+
+$pointerEventsItems: (
+    none,
+    auto
+);
+@each $val in $pointerEventsItems{
+    // pointer-events
+    .pe-#{$val}{
+        pointer-events: $val;
+    }
+}
+
+// 描述子级容器
+@include c(h);
+@include c(hinline);
+@include c(v);
+@include c(vinline);
+@include c(title);
+@include c(clickable);
+@include c(page);
+@include c(ellipsis);
+@each $k, $v in $sizes{
+    @include c(h-#{$k});
+    @include c(v-#{$k});
+    @include c(p-#{$k});
+    @include c(m-#{$k});
+}
+@each $k, $v in $sizes{
+    @include c(p-h-#{$k});
+    @include c(p-v-#{$k});
+    @include c(m-h-#{$k});
+    @include c(m-v-#{$k});
+}
+@each $k, $v in $sizes{
+    @include c(p-t-#{$k});
+    @include c(p-b-#{$k});
+    @include c(p-l-#{$k});
+    @include c(p-r-#{$k});
+    @include c(m-t-#{$k});
+    @include c(m-b-#{$k});
+    @include c(m-l-#{$k});
+    @include c(m-r-#{$k});
+}
+@each $val in $flexLength{
+    @include c(f-#{$val});
+    @include c(shrink-#{$val});
+    @include c(grow-#{val});
+}
+@each $key, $val in $sizeLengths{
+    @include c(size-#{$key});
+}
+@each $key, $val in $sizeLengths{
+    @include c(width-#{$key});
+    @include c(height-#{$key});
+}
+@each $val in $overflowValues{
+    @include c(overflow-#{$val});
+}
+@each $val in $justifyItems{
+    @include c(justify-#{$val});
+}
+@each $val in $alignItems{
+    @include c(align-#{$val});
+}
+@each $val in $pointerEventsItems{
+    @include c(pe-#{$val});
+}

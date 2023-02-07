@@ -1,0 +1,54 @@
+// transitions
+
+// fade
+.anfo-fade-enter-active,
+.anfo-fade-leave-active {
+  transition: opacity .3s;
+}
+
+.anfo-fade-enter-from,
+.anfo-fade-leave-to {
+  opacity: 0;
+}
+
+// // anfo-fade-fast
+.anfo-fade-fast-enter-active,
+.anfo-fade-fast-leave-active {
+  transition: opacity .1s;
+}
+
+.anfo-fade-fast-enter-from,
+.anfo-fade-fast-leave-to {
+  opacity: 0;
+}
+
+
+// anfo-fade-transition-right
+.anfo-fade-tr-enter-active,
+.anfo-fade-tr-leave-active {
+  transition: opacity .3s, transform .3s;
+}
+
+.anfo-fade-tr-enter-from,
+.anfo-fade-tr-leave-to {
+  opacity: 0;
+  transform: translate(32px, 0);
+}
+
+.anfo-move-default-move, /* 对移动中的元素应用的过渡 */
+.anfo-move-default-enter-active,
+.anfo-move-default-leave-active {
+  transition: all 0.5s ease;
+}
+
+.anfo-move-default-enter-from,
+.anfo-move-default-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+/* 确保将离开的元素从布局流中删除
+  以便能够正确地计算移动的动画。 */
+.anfo-move-default-leave-active {
+  position: absolute;
+}
