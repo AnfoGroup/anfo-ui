@@ -18,6 +18,10 @@
     "dev": "vite -c vite.config.dev.js",
     "build": "vite build -c vite.config.prod.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/npm/cli.git"
+  },
   "dependencies": {
     "@ant-design/icons-vue": "^6.1.0",
     "events": "^3.3.0",
