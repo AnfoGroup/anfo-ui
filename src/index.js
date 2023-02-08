@@ -95,6 +95,7 @@ let anfoUI = {
         let instance = getCurrentInstance()
         return instance.appContext.config.globalProperties.$anfoList
     },
+    utils: utilsScript,
     ...utilsScript,
 }
 

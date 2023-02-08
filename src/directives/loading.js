@@ -42,7 +42,7 @@ export default {
                     render: ()=>h(Transition, {
                         name: 'anfo-fade',
                         appear: true,
-                    }, visible.value ? h('div', {
+                    }, ()=>visible.value ? h('div', {
                         style: {
                             position: 'absolute',
                             width: '100%',

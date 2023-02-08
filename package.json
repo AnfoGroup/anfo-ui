@@ -1,19 +1,30 @@
 {
   "name": "@anfo/ui",
-  "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/anfoUI.umd.cjs",
+  "module": "./dist/anfoUI.js",
+  "exports": {
+    ".": {
+      "import": "./dist/anfoUI.js",
+      "require": "./dist/anfoUI.umd.cjs"
+    },
+    "./style": "./dist/style.css"
+  },
   "scripts": {
     "dev": "vite -c vite.config.dev.js",
-    "preview": "vite -c vite.config.dev.js preview",
-    "build": "vite -c vite.config.prod.js build"
+    "build": "vite build -c vite.config.prod.js"
   },
   "dependencies": {
     "@ant-design/icons-vue": "^6.1.0",
     "events": "^3.3.0",
     "sass": "^1.58.0",
     "shortid": "^2.2.16",
-    "vue": "^3.2.45"
+    "vue": "^3.2.45",
+    "vue-router": "^4.1.6"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.0.0",
