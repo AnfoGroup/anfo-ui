@@ -16,7 +16,7 @@
 </template>
 
 <script setup>
-import { computed } from "@vue/runtime-core"
+import { computed, watch } from "vue"
 import { LeftOutlined, RightOutlined } from '@ant-design/icons-vue'
 
 let props = defineProps({

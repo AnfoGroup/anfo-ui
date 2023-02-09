@@ -4,15 +4,7 @@ import AnfoUI from './index'
 
 let app = createApp(App)
 
-import Pagination from '@/components/Pagination'
-
-app.use(AnfoUI, {
-    list: {
-        pagination: {
-            paginationComponent: h(Pagination, {})
-        }
-    }
-})
+app.use(AnfoUI)
 
 import router from '@/router'
 app.use(router)
