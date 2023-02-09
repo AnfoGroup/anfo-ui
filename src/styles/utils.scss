@@ -141,7 +141,6 @@ $sizes: (
         @extend .h-#{$k};
         @extend ._hb-#{$k};
     }
-    @include c(hbox-#{$k});
     .vbox-#{$k}{
         @extend .v-#{$k};
         @extend ._vb-#{$k};
@@ -390,6 +389,8 @@ $pointerEventsItems: (
     @include c(v-#{$k});
     @include c(p-#{$k});
     @include c(m-#{$k});
+    @include c(hbox-#{$k});
+    @include c(vbox-#{$k});
 }
 @each $k, $v in $sizes{
     @include c(p-h-#{$k});

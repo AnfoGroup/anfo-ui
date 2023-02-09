@@ -6,6 +6,8 @@ import ResizeContainerComponent from '@/components/ResizeContainer'
 import SpinComponent from '@/components/Spin'
 import LoopComponent from '@/components/Loop'
 
+import Pagination from '@/components/Pagination'
+
 import createListUtils from '@/scripts/list'
 import utilsScript from '@/scripts/utils'
 // let utilsScript = {}
@@ -73,7 +75,7 @@ let anfoUI = {
         app.config.globalProperties.$anfoUI = anfoUI
         app.config.globalProperties.$anfoUIConfig = anfoUI
         // 给ListPagination组件引用
-        app.config.globalProperties.$anfoUIListPagination = paginationComponent
+        app.config.globalProperties.$anfoUIListPagination = paginationComponent || Pagination
 
         let listUtils = createListUtils({ dataMapper: {
             pagination: paginationDataMapper,
