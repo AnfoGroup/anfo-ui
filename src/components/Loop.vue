@@ -23,7 +23,8 @@
                     :layer="(+layer)+1"
                     v-model:datas="item[getChildrenKey(item)]"
                     :container-class="containerClass"
-                    :container-style="containerStyle">
+                    :container-style="containerStyle"
+                    :transition-name="transitionName">
                     <template v-slot="item">
                         <slot v-bind="item"></slot>
                     </template>
@@ -63,7 +64,7 @@ let props = defineProps({
     },
     transitionName: {
         type: String,
-        default: 'anfo-move-default',
+        default: '',
     },
 })
 
