@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue'
+import { nextTick, ref, watch } from 'vue'
 
 export default {
 
@@ -20,37 +20,52 @@ export default {
     createMiddleware(value, emit, options = {}){
         let middleware = ref(null)
         let {
+            deep = true,
             valueWatch: valueWatchOptions = {},
             middlewareWatch: middlewareWatchOptions = {},
+            debug = false,
         } = options
-
         let canSetMiddleware = true
         let canEmit = true
         watch(value, val=>{
+            if(debug){
+                console.warn('watch value(val, canSetMiddleware, canEmit): ', val, canSetMiddleware, canEmit)
+            }
             if(canSetMiddleware){
                 canEmit = false
                 middleware.value = val
                 canEmit = true
             }
+            if(debug){
+                console.warn('after watch value')
+            }
         }, {
-            deep: true,
+            deep,
             immediate: true,
             ...valueWatchOptions,
         })
         watch(middleware, val=>{
+            // val = JSON.parse(JSON.stringify(val))
+            if(debug){
+                console.warn('watch middleware(val, canSetMiddleware, canEmit): ', val, canSetMiddleware, canEmit)
+            }
             if(canEmit && emit instanceof Function){
                 canSetMiddleware = false
                 let ret = emit(val, this.awaitChange)
+                let nextTickPromise = new Promise(nextTick)
+                let promises = [nextTickPromise]
                 if(ret instanceof Promise){
-                    ret.finally(()=>{
-                        canSetMiddleware = true
-                    })
-                }else{
-                    canSetMiddleware = true
+                    promises.push(ret)
                 }
+                Promise.all(promises).finally(()=>{
+                    canSetMiddleware = true
+                    if(debug){
+                        console.warn('after watch middleware, canSetMiddleware: ', canSetMiddleware)
+                    }
+                })
             }
         }, {
-            deep: true,
+            deep,
             ...middlewareWatchOptions,
         })
 
@@ -64,6 +79,34 @@ export default {
         }, {
             immediate: true,
             ...options
+        })
+        return ret
+    },
+    async iterate(datas, childrenKey, func, parent = null){
+        if(func instanceof Function){
+            for(let i = 0; i < datas.length; ++i){
+                let d = datas[i]
+                let ret = await func(d, i, datas, parent)
+                if(ret !== undefined){
+                    return ret
+                }else{
+                    if(childrenKey instanceof Function){
+                        childrenKey = childrenKey(d)
+                    }
+                    if(d[childrenKey] instanceof Array){
+                        ret = await this.iterate(d[childrenKey], childrenKey, func, d)
+                        if(ret !== undefined){
+                            return ret
+                        }
+                    }
+                }
+            }
+        }
+    },
+    async iterateMap(datas, childrenKey, func){
+        let ret = []
+        this.iterate(datas, childrenKey, d=>{
+            ret.push(func(d))
         })
         return ret
     },

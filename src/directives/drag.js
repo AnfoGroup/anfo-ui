@@ -35,10 +35,10 @@ function isPointInRect(point, rect){
 function dispatchEvent(vnode, name, data = {}){
     let event = new Event(name)
     event.data = data
-    // Object.assign(event, data)
-    let value = data?.value || data?.context?.value
-    event.getValue = key=>key !== undefined ? value?.[key] : value
     event.getData = key=>key !== undefined ? data?.[key] : data
+    // event.getValue = key=>key !== undefined ? value?.[key] : value
+    event.getContext = ()=>event.getData()?.context
+    event.getValue = key=>key !== undefined ? event.getContext()?.value?.[key] : event.getContext()?.value
     vnode.el.dispatchEvent(event)
 }
 
@@ -65,7 +65,6 @@ const EVENT_DROP_DRAG_FINISH = 'drop-drag-finish'
 const EVENT_DROP_DRAG_FINISH_WITH_NO_DROP = 'drop-drag-finish-with-no-drop'
 const EVENT_DROP_ACTIVE = 'drop-active'
 const EVENT_DROP_DISACTIVE = 'drop-disactive'
-
 
 const EVENT_CLICK = 'click'
 
@@ -121,65 +120,107 @@ function createDragContext(el, { value, oldValue, arg, modifiers, instance, dir 
                 if(context._mouseMoveCount < clickThreshold){
                     context._mouseMoveCount += 1
                 }else{
-                    event.emit(EVENT_DRAG_START, context)
-                    dropContexts.filter(d=>d.channel === channel).forEach(d=>d.event.emit(EVENT_DROP_DRAG_START, context))
+                    event.emit(EVENT_DRAG_START, {
+                        event: e,
+                        context
+                    })
+                    dropContexts.filter(d=>d.channel === channel).forEach(d=>d.event.emit(EVENT_DROP_DRAG_START, {
+                        event: e,
+                        context
+                    }))
                     document.querySelector('body').appendChild(newEl)
 
                     // 确保transition能运转
                     requestAnimationFrame(()=>requestAnimationFrame(()=>{
-                        opacityWrapper.style.opacity = .6
+                        // opacityWrapper.style.opacity = .6
                     }))
-                    // setTimeout(()=>{
-                    //     opacityWrapper.style.opacity = .3
-                    // }, 120)
                 }
             }
             if(newEl.parentElement){
                 // 使用鼠标位置作为参考
                 let dragRefPosition = [e.clientX, e.clientY]
                 let drops = dragDirective.getDroppables(dragRefPosition, channel)
+                context.time = Date.now()
                 drops.in.forEach(d=>{
-                    if(d._isEnter){
-                        d.event.emit(EVENT_DROP_DRAG_LEAVE, context)
+                    // 提供dragelement 相对于drop元素的相对位置
+                    // let dropElement = d.el
+                    // let rect = dropElement.getBoundingClientRect()
+                    // let dropPosition = [
+                    //     rect.left,
+                    //     rect.top,
+                    // ]
+                    // let offset = [dragRefPosition[0] - dropPosition[0], dragRefPosition[1] - dropPosition[1]] 
+                    if(!d._isEnter){
+                        d.event.emit(EVENT_DROP_DRAG_ENTER, {
+                            event: e,
+                            context,
+                            offset: d.offset,
+                        })
                         d._isEnter = true
                     }
                     if(!d._isDropActive){
-                        d.event.emit(EVENT_DROP_ACTIVE, context)
+                        d.event.emit(EVENT_DROP_ACTIVE, {
+                            event: e,
+                            context
+                        })
                         d._isDropActive = true
                     }
 
-                    // 提供dragelement 相对于drop元素的相对位置
-                    let dropElement = d.el
-                    // let dragCenterPosition = getCenterPosition(newEl)
-                    let rect = dropElement.getBoundingClientRect()
-                    let dropPosition = [
-                        rect.left,
-                        rect.top,
-                    ]
-
                     d.event.emit(EVENT_DROP_DRAG_MOVE, {
                         event: e,
+                        dropContext: d,
                         context,
-                        offset: [dragRefPosition[0] - dropPosition[0], dragRefPosition[1] - dropPosition[1]]
+                        offset: d.offset,
                     })
                 })
                 drops.out.forEach(d=>{
                     if(d._isEnter){
-                        d.event.emit(EVENT_DROP_DRAG_LEAVE, context)
+                        d.event.emit(EVENT_DROP_DRAG_LEAVE, {
+                            event: e,
+                            context
+                        })
                         d._isEnter = false
                     }
                     if(d._isDropActive){
-                        d.event.emit(EVENT_DROP_DISACTIVE, context)
+                        d.event.emit(EVENT_DROP_DISACTIVE, {
+                            event: e,
+                            context,
+                        })
                         d._isDropActive = false
                     }
                 })
-                if(drops.in?.length > 0){
-                    // in
-                    event.emit(EVENT_DROP_DRAG_ENTER, context)
+                
+                if(context._enterContexts?.length > 0){
+                    // 查找和上次的对比，查找_enterContexts与上次哪里不同
+                    let enterContexts = drops.in
+                    let enterContextsIds = enterContexts.map(d=>d.id)
+                    let _enterContextsIds = context._enterContexts.map(d=>d.id)
+                    let enterDiff = enterContextsIds.filter(d=>!_enterContextsIds.includes(d))
+                    if(enterDiff.length > 0){
+                        event.emit(EVENT_DRAG_ENTER, {
+                            event: e, 
+                            drops: enterDiff.map(d=>enterContexts.find(c=>c.id === d)),
+                        })
+                        context._enterContexts = enterContexts
+                    }
+                    let leaveDiff = _enterContextsIds.filter(d=>!enterContextsIds.includes(d))
+                    if(leaveDiff.length > 0){
+                        event.emit(EVENT_DRAG_LEAVE, {
+                            event: e,
+                            drops: leaveDiff.map(d=>context._enterContexts.find(c=>c.id === d)),
+                            context,
+                        })
+                        context._enterContexts = enterContexts
+                    }
                 }else{
-                    // out
-                    event.emit(EVENT_DROP_DRAG_LEAVE, context)
+                    if(drops.in.length > 0){
+                        event.emit(EVENT_DRAG_ENTER, {
+                            event: e, 
+                            drops: drops.in,
+                        })
+                    }
                 }
+                context._enterContexts = drops.in
                 context._currentX += (e.pageX - context._mouseEvent.pageX)
                 context._currentY += (e.pageY - context._mouseEvent.pageY)
                 Object.assign(newEl.style, {
@@ -204,23 +245,38 @@ function createDragContext(el, { value, oldValue, arg, modifiers, instance, dir 
                     let dragRefPosition = [e.clientX, e.clientY]
                     let drops = dragDirective.getDroppables(dragRefPosition, channel)
                     drops.in.forEach(d=>{
-                        d.event.emit(EVENT_DROP_DRAG_FINISH_WITH_DROP, context)
+                        d.event.emit(EVENT_DROP_DRAG_FINISH_WITH_DROP, {
+                            event,
+                            context,
+                            dropContext: d,
+                            offset: d.offset,
+                        })
                     })
                     dropContexts.filter(d=>d.channel === channel).forEach(d=>{
-                        d.event.emit(EVENT_DROP_DRAG_FINISH, context)
+                        d.event.emit(EVENT_DROP_DRAG_FINISH, {
+                            event,
+                            context,
+                            dropContext: d,
+                            offset: d.offset,
+                        })
                         delete d._isDropActive
                     })
                     dropContexts.filter(d=>d.channel === channel && !drops.in.includes(d)).forEach(d=>{
-                        d.event.emit(EVENT_DROP_DRAG_FINISH_WITH_NO_DROP, context)
+                        d.event.emit(EVENT_DROP_DRAG_FINISH_WITH_NO_DROP, {
+                            event,
+                            context,
+                            dropContext: d,
+                            offset: d.offset,
+                        })
                     })
                     let finishType = drops.in.length > 0 ? EVENT_DRAG_FINISH_WITH_DROP : EVENT_DRAG_FINISH_WITH_NO_DROP
-                    let finishParams = finishType === EVENT_DRAG_FINISH_WITH_DROP ? {ins: drops.in, context} : context
+                    let finishParams = finishType === EVENT_DRAG_FINISH_WITH_DROP ? {event, drops, context} : { event, context }
                     event.emit(finishType, finishParams)
                     dropContexts.filter(d=>d.channel === channel).forEach(d=>{
-                        d.event.emit(EVENT_DROP_DRAG_FINISH_WITH_NO_DROP, context)
+                        d.event.emit(EVENT_DROP_DRAG_FINISH_WITH_NO_DROP, {event, context})
                     })
-                    event.emit(EVENT_DRAG_FINISH_WITH_NO_DROP, context)
-                    event.emit(EVENT_DRAG_FINISH, context)
+                    event.emit(EVENT_DRAG_FINISH_WITH_NO_DROP, {event, context})
+                    event.emit(EVENT_DRAG_FINISH, {event, context})
                     newEl.remove()
                 }
                 Object.keys(dragContextsDeleteMap).forEach(id=>{
@@ -235,11 +291,10 @@ function createDragContext(el, { value, oldValue, arg, modifiers, instance, dir 
             // resetall
             dropContexts.filter(d=>d.channel === channel).forEach(d=>{
                 if(d._isEnter){
-                    d.event.emit(EVENT_DROP_DRAG_LEAVE, context)
                     d._isEnter = false
                 }
                 if(d._isDropActive){
-                    d.event.emit(EVENT_DROP_DISACTIVE, context)
+                    d.event.emit(EVENT_DROP_DISACTIVE, {event, context})
                     d._isDropActive = false
                 }
             })
@@ -296,6 +351,9 @@ function removeContext(id){
 function getContext(id){
     return dragContexts[id]
 }
+function getDropContext(id){
+    return dropContexts.find(d=>d.id === id)
+}
 
 let dragDirective = {
     getDroppables(position, channel,){
@@ -308,6 +366,7 @@ let dragDirective = {
             let y = rect.top
             let width = dropElement.offsetWidth
             let height = dropElement.offsetHeight
+            d.offset = [position[0] - x, position[1] - y]
             // 取中心点
             if(isPointInRect(position, [x, y, width, height])){
                 ins.push(d)
@@ -354,7 +413,7 @@ let dragDirective = {
     },
 
     updated(el, { value }){
-        let context = getContext(el.contextID)
+        let context = getContext(el.dragContextID)
         if(context){
             context.value = value
         }
@@ -389,10 +448,12 @@ let dragDirective = {
         })
 
         event.on(EVENT_DRAG_START, (...rest)=>{
+            el.classList.add(classes.active)
             context.newEl.classList.add(classes.active)
             dispatch(EVENT_DRAG_START, ...rest)
         })
         event.on(EVENT_DRAG_FINISH, (...rest)=>{
+            el.classList.remove(classes.active)
             context.newEl.classList.remove(classes.active)
             dispatch(EVENT_DRAG_FINISH, ...rest)
         })
@@ -404,7 +465,7 @@ let dragDirective = {
         })
         // event.on(EVENT_CLICK, e=>{
         // })
-        el.contextID = context.id
+        el.dragContextID = context.id
         el.addEventListener('mousedown', context.handleMouseDown)
         el.addEventListener('click', context.handleClickCapture, true)
         document.addEventListener('mousemove', context.handleMouseMove)
@@ -413,11 +474,11 @@ let dragDirective = {
     },
 
     beforeUnmount(el){
-        dragContextsDeleteMap[el.contextID] = true    
+        dragContextsDeleteMap[el.dragContextID] = true    
     },
 
-    destroyContext(contextID){
-        let context = getContext(contextID)
+    destroyContext(dragContextID){
+        let context = getContext(dragContextID)
         if(context){
             let el = context.el
             el.removeEventListener('mousedown', context.handleMouseDown)
@@ -426,7 +487,7 @@ let dragDirective = {
             document.removeEventListener('mouseup', context.handleMouseUp)
             document.removeEventListener('context', context.handleMouseContext)
             document.removeEventListener('contextmenu', context.handleContextMenu)
-            removeContext(contextID)
+            removeContext(dragContextID)
         }
     },
 }
@@ -443,6 +504,13 @@ function createDropContext(el, { value, oldValue, arg: channel, modifiers, insta
 }
 
 let dropDirective = {
+    updated(el, { value }){
+        let context = getDropContext(el.dropContextID)
+        if(context){
+            context.value = value
+        }
+    },
+
     mounted(el, { value, oldValue, arg, modifiers, instance, dir }, vnode, prevVnode){
         // ctx[arg] = 
         let e = new EventEmitter
@@ -496,7 +564,7 @@ let dropDirective = {
 
         let context = createDropContext(...arguments)
         context.event = e
-        el.contextID = context.id
+        el.dropContextID = context.id
         dropContexts.push(context)
     },
 
@@ -509,7 +577,7 @@ let dropDirective = {
 
     beforeUnmount(el){
         // dropContextsDeleteMap[el.contextID] = true
-        dropDirective.destroyContext(el.contextID)
+        dropDirective.destroyContext(el.dropContextID)
     }
 
 }

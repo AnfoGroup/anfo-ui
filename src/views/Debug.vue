@@ -1,6 +1,31 @@
 <template>
     <div class="v-m p-l">
         <h1>AnfoUI</h1>
+{{ exDatas }}
+<anfo-orderable-container is-leavable is-enterable v-model:datas="exDatas" class="v-m">
+    <template #="data">
+        <div class="h justify-center" :style="{width: '50px',height: '50px', background: 'lightgray',borderRadius: '5px'}">
+            {{ data.data }}
+        </div>
+    </template>
+</anfo-orderable-container>
+
+<anfo-orderable-container :datas="[4, 5, 6]" class="h-s" is-enterable is-horizontal is-leavable>
+    <template #="data">
+        <div class="h justify-center" :style="{width: '50px',height: '50px', background: 'yellow',borderRadius: '5px'}">
+            {{ data.data }}
+        </div>
+    </template>
+</anfo-orderable-container>
+
+        <anfo-tree v-model:datas="treeDatas" :data-key="d=>d?.label">
+            <template #="{ item }">
+                <div>
+                    {{ item.label }}
+                </div>
+            </template>
+        </anfo-tree>
+        
         <anfo-spin></anfo-spin>
         <anfo-list-pagination :context="paginationContext">
             <template #="{ item }">
@@ -43,12 +68,12 @@
                 </template>
             </anfo-scroll-container>
 
-            <anfo-orderable-container v-model:datas="datas" :data-key="d => d.a">
+            <!-- <anfo-orderable-container v-model:datas="datas" :data-key="d => d.a">
                 <template #="item">{{ item }}</template>
             </anfo-orderable-container>
             <anfo-orderable-container v-model:datas="datas2" :data-key="d => d.a">
                 <template #="item">{{ item }}</template>
-            </anfo-orderable-container>
+            </anfo-orderable-container> -->
 
             <anfo-loop :datas="treeDatas" :data-key="d => d.label">
                 <template #="{ item }">
@@ -90,6 +115,7 @@ let scrollContext = list.scroll.createContext({
 })
 scrollContext.refreshDatas()
 
+let exDatas = ref([1, 2, 3])
 let datas = ref([{a: 1}, {a: 2}, {a: 3}, {a: 4}])
 let datas2 = utils.createMiddleware(datas, async val=>{await new Promise(r=>setTimeout(r, 1000));datas.value = val}, )
 
@@ -101,7 +127,10 @@ let treeDatas = ref([{
   children: [{
     label: 'test'
   }, {
-    label: 'equal'
+    label: 'equal',
+    children: [{
+        label: 'dd'
+    }]
   }],
 }, {
   label: 'hello2'

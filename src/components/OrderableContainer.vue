@@ -1,27 +1,27 @@
 <template>
-<div
-    ref="container"
-    v-drop:[channel]
-    @drop-drag-start="handleDragStartByDrop"
-    @drop-drag-finish="handleEmitChange"
-    @drop-drag-move="handleDragMove" class="anfo-drag-container page">
-    <transition-group :name="transitionName">
-        <div v-drag:[channel]="{
-            data,
-            i,
-        }"
-            @drag-finish="handleDragFinish"
-            @drag-start="handleDragStart(i)"
-            v-for="(data, i) in lDatas"
-            :key="getKey(data, lDatas) || i">
-            <slot v-bind="{ data, i }"></slot>
-        </div>
-    </transition-group>
-</div>
+    <div
+        ref="container"
+        v-drop:[channel]
+        @drop-drag-move="handleDragMove"
+        @drop-drag-leave="handleDropDragLeave"
+        @drop-drag-enter="handleDragEnter"
+        @drop-drag-start="handleDragStart"
+        @drop-drag-finish="_draggingKey = null"
+        :class="['page orderable-container', isHorizontal ? 'h' : 'v']">
+        <transition-group :name="transitionName">
+            <div v-for="(d, i) in middleware" :key="dataKey(d)"
+                v-drag:[channel]="{ d, i }"
+                :class="['orderable-item', getKey(d) === _draggingKey ? 'is-current':'']">
+                <div class="item-content">
+                    <slot :data="d" :i="i"></slot>
+                </div>
+            </div>
+        </transition-group>
+    </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import utils from '@/scripts/utils'
 
 let props = defineProps({
@@ -39,156 +39,134 @@ let props = defineProps({
     },
     channel: {
         type: String,
-        default: 'anfo-drag-container',
+        default: 'anfo-orderable-container',
     },
-    horizontal: {
+    isHorizontal: {
         type: Boolean,
         default: false,
     },
-    fixed: {
+    isOrderable: {
+        type: Boolean,
+        default: true,
+    },
+    isLeavable: {
         type: Boolean,
         default: false,
-    }
+    },
+    isEnterable: {
+        type: Boolean,
+        default: false,
+    },
 })
-
-let emit = defineEmits(['change', 'update:datas', 'drag-start-by-drop', 'drag-finish-by-drop'])
+let emit = defineEmits(['update:datas'])
 
 let container = ref(null)
-// let lDatas = ref(props.datas)
-// watch(()=>props.datas, val=>lDatas.value = val)
-let lDatas = utils.createMiddleware(()=>props.datas)
+let middleware = utils.createMiddleware(()=>{
+    let datas = props.datas
+    return JSON.parse(JSON.stringify(datas))
+}, val=>emit('update:datas', val))
 
-let lDatasDict = computed(()=>{
-    return lDatas.value.reduce((t, d)=>{
-        t[getKey(d, lDatas.value)] = d
-        return t
-    }, {})
-})
+// 非计算属性，维护时需要考虑数据的同步
+// 在move中会根据当前的状态计算 middleware数据的内容
+let _originalDragKeys = null
+let _originalDragDatas = []
+let _draggingKey = ref(null)
+let _currentDragingIndex = -1
+let _offsetRels = []
+let _offsetRelKey = computed(()=>props.isHorizontal ? 'offsetLeft' : 'offsetTop')
+let _heightRelKey = computed(()=>props.isHorizontal ? 'offsetWidth' : 'offsetHeight')
 
-let draggingInd = ref(-1)
-
-function getKey(data, datas){
-    return props.dataKey instanceof Function ? props.dataKey(data, datas) : null
+function getKey(data){
+    return props.dataKey(data)
 }
-function getKeys(datas){
-    return [...datas.map(d=>getKey(d, datas))]
-}
-function getRemovable(...rest){
-    return props.removable instanceof Function ? props.removable(...rest) : !!props.removable
-}
-function getRestoreWhenNoDrop(...rest){
-    return props.restoreWhenNoDrop instanceof Function ? props.restoreWhenNoDrop(...rest) : !!props.restoreWhenNoDrop
+function getDataByKey(key){
+    return middleware.value.find(d=>getKey(d) === key)
 }
 
-// 更新datas
-function getDataIndex(data){
-    let dataKey = getKey(data)
-    return lDatas.value.findIndex((d, i)=>{
-        let key = getKey(d, lDatas.value)
-        return key === dataKey
-    })
+function handleDropDragLeave(e){
+    if(props.isLeavable){
+        let key = _draggingKey.value
+        let ind = middleware.value.findIndex(d=>getKey(d) === key)
+        middleware.value.splice(ind, 1)
+        _currentDragingIndex = -1
+    }
 }
-function setData(data, i){
-    let ind = getDataIndex(data)
-    let datas = [...lDatas.value]
-    let isNew = false
-    if(ind > -1){
-        // modified
-        datas[ind] = data
-    }else{
-        // add
-        isNew = true
-        if(i != null){
-            datas.splice(i, 0, data)
-        }else{
-            datas.push(data)
+
+function getIndexByOffset(offset){
+    let [x = -1, y = -1] = offset || []
+    let rel = props.isHorizontal ? x : y
+    let ind = _offsetRels.findLastIndex(val=>rel > val)
+    return ind
+}
+
+function handleDragEnter(e){
+    if(props.isEnterable){
+        let offset = e.getData('offset')
+        let { d, i } = e.getValue() || {}
+        // 查看当前数据是否有value
+        let key = getKey(d)
+        if(!_originalDragDatas.some(i=>getKey(i) === key)){
+            let index = getIndexByOffset(offset)
+            _originalDragKeys.splice(index, 0, key)
+            _originalDragDatas.splice(index, 0, d)
+            _draggingKey.value = key
+            // 增加一个最后的点 用于计算最后一个元素的位置 因为这个数据是别的地方来的
+            let els = [...container.value.children]
+            let last = els[_offsetRels.length - 1]
+            _offsetRels.push(last[_offsetRelKey.value] + last[_heightRelKey.value])
+            // console.debug(_offsetRels, last[_heightRelKey.value])
+            // requestAnimationFrame(()=>_offsetRels.push(container.value.offsetHeight - last.offsetHeight))
+            // requestAnimationFrame(()=>console.debug(last.getBoundingClientRect(), last.innerHTML, _heightRelKey.value, last, last[_offsetRelKey.value], last[_heightRelKey.value]))
         }
     }
-    // emit('update:datas', datas)
-    lDatas.value = datas
-    return isNew
 }
-function removeData(data){
-    let ind = getDataIndex(data)
-    if(ind > -1){
-        let datas = [...lDatas.value]
-        datas.splice(ind, 1)
-        // emit('update:datas', datas)
-        lDatas.value = datas
+
+function handleDragStart(e){
+    // 本次拖拽是否自己触发的
+    let { d, i } = e.getValue() || {}
+    let key = getKey(d)
+    if(middleware.value.some(i=>getKey(i) === key)){
+        _draggingKey.value = key
     }
+    _originalDragKeys = middleware.value.map(d=>getKey(d))
+    _originalDragDatas = _originalDragKeys.map(getDataByKey)
+    let els = [...container.value.children]
+    _offsetRels = els.map(el=>el[_offsetRelKey.value])
 }
 
-let oldKeys = []
-let oldDatas = ref([])
-let oldDatasDict = computed(()=>{
-    return oldDatas.value.reduce((t, d)=>{
-        t[getKey(d, lDatas.value)] = d
-        return t
-    }, {})
-})
-function handleDragStartByDrop(){
-    oldDatas.value = [...lDatas.value]
-    oldKeys = getKeys(lDatas.value)
-    emit('drag-start-by-drop')
-}
-function handleDragStart(i){
-    draggingInd.value = i
-}
-function handleDragFinish(){
-    draggingInd.value = -1
-}
-function emitChange(){
-    // 判断是否有改变，触发change
-    let keys = getKeys(lDatas.value)
-    if(keys.length !== oldKeys.length || keys.findIndex((k, i)=>k !== oldKeys[i]) > -1){
-        // 查找出增加的或删除的
-        let news = []
-        let rms = []
-        if(keys.length > oldKeys.length){
-            // 查找新增的
-            news = keys.filter(k=>!oldKeys.includes(k)).map(k=>lDatasDict.value[k])
-        }else if(keys.length < oldKeys.length){
-            // 查找删除的
-            rms = oldKeys.filter(k=>!keys.includes(k)).map(k=>oldDatasDict.value[k])
-        }
-        emit('change', lDatas.value, oldDatas.value, news, rms)
-    }
-}
-function handleEmitChange(e){
-    // settimeout 是因为drag的finish-with-no-drop 先执行，
-    // drga的finish-with-no-drop 里对没drop到的东西进行了restore操作，所以要用settimeout先等它先完成
-    setTimeout(()=>{
-        emit('update:datas', lDatas.value)
-        emit('drag-finish-by-drop')
-        emitChange()
-    })
-}
-
-// 把之前应用的throttle去掉了、因为加了throttle之后这里的调用顺序就出现了问题、导致handleDragFinish先调用
-// draggingInd变成了-1，然后handleDragMove 还最后调用了一次 导致增加了一个新元素、
-// 如果要加的话需要一个变量标记dragFinish了、再一次的handleDragMove 就不再调用了
-let handleDragMove = (e)=>{
-    if(!props.fixed){
-        let { event, context, offset } = e.data || {}
-        let [x, y] = offset || [0, 0]
-        let data = context.value.data
-
-        let ind = getDataIndex(data)
-        // 这里只进行顺序的调整
-        if(ind > -1 && container.value){
-            let doms = [...container.value.children]
-            let toInd = doms.filter(d=>!!d).map(d=>props.horizontal ? d.offsetLeft : d.offsetTop).findLastIndex(val=>(props.horizontal ? x: y) >= val)
-            toInd = toInd === -1 ? 0 : toInd
-            if(toInd !== draggingInd.value){
-                let datas = [...lDatas.value]
-                if(draggingInd.value > -1){
-                    datas.splice(draggingInd.value, 1)
-                }
-                datas.splice(toInd, 0, data)
-                lDatas.value = datas
-                draggingInd.value = toInd
+function handleDragMove(e){
+    let { offset = [] } = e.getData() || {}
+    let ind = getIndexByOffset(offset)
+    if(ind > -1 && _currentDragingIndex !== ind){
+        _currentDragingIndex = ind
+        let datas = [..._originalDragDatas]
+        let draggingIndex = datas.findIndex(d=>getKey(d) === _draggingKey.value)
+        if(draggingIndex > -1){
+            if(props.isOrderable){
+                datas.splice(ind, 0,
+                    datas.splice(draggingIndex, 1)[0])
             }
+            middleware.value = datas
         }
     }
 }
 </script>
+
+<style lang="scss" scoped>
+.orderable-item{
+    // transition: border-radius .3s, background .3s;
+    transition: all .3s ease;
+    &.is-current{
+        // opacity: 0;
+        border-radius: 5px;
+        background: rgba(0, 0, 0, .05);
+
+        .item-content{
+            opacity: 0;
+        }
+    }
+    .item-content{
+        transition: opacity .3s;
+    }
+}
+</style>
