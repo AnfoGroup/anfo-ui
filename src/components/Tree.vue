@@ -16,7 +16,7 @@
                         <div class="is-sub"></div>
                     </div>
                     <CaretRightOutlined
-                        @click="data.toggleSubLoops?.()"
+                        @click="data.toggle?.()"
                         class="clickable shrink-0" v-if="data.hasChildren" :style="{
                         fontSize: '.8em',
                         transition: 'transform .3s',
@@ -32,6 +32,7 @@
 import utils from '@/scripts/utils'
 import loopProps from './loopProps'
 import { CaretRightOutlined } from '@ant-design/icons-vue'
+import extend from 'extend'
 
 let props = defineProps({
     ...loopProps,
@@ -49,9 +50,9 @@ function getChildrenKey(item){
 function getChildren(item){
     return item[getChildrenKey(item)] || []
 }
-let emit = defineEmits(['update:datas'])
+let emit = defineEmits(['update:datas', 'change'])
 
-let middleware = utils.createMiddleware(()=>props.datas, val=>emit('update:datas', val))
+let middleware = utils.createMiddleware(()=>extend(true, [], props.datas))
 
 function getTypeByOffset(el, offset){
     return [
@@ -90,6 +91,32 @@ async function isImInFamilyOfTarget(target, targetChildrenKey, me){
     }))
 }
 
+async function fromParentToParent(treeData, from, fromIndex, to, toIndex){
+    let offset = 0
+    from = await utils.iterate(treeData, d=>getChildrenKey(d), d=>{
+        if(getKey(d) === (from && getKey(from))){
+            return d
+        }
+    })
+    to = await utils.iterate(treeData, d=>getChildrenKey(d), d=>{
+        if(getKey(d) === (to && getKey(to))){
+            return d
+        }
+    })
+    if((from && getKey(from)) === (to && getKey(to))){
+        // 同级
+        if(fromIndex < toIndex){
+            offset = -1
+        }
+    }
+    // getchildren 为空，表示顶层
+    if(to && !Array.isArray(to[getChildrenKey(to)])){
+        to[getChildrenKey(to)] = []
+    }
+    ;(to ? getChildren(to) : treeData).splice(offset + toIndex, 0,
+        ...(from ? getChildren(from) : treeData).splice(fromIndex, 1))
+}
+
 async function handleDrop(e){
     let dropContext = e.getData('dropContext')
     let dropValue = dropContext.value
@@ -97,22 +124,29 @@ async function handleDrop(e){
     let value = e.getValue()
     let valueItem = value?.item
     let [ isLeft, isTop ] = getTypeByOffset(dropContext.el, e.getData('offset'))
-    let ind = Math.min(dropValue.datas?.length - 1, Math.max(0, isTop ? dropContext.value?.i : dropContext.value?.i + 1))
+    let ind = Math.min(dropValue.datas?.length, Math.max(0, isTop ? dropContext.value?.i : dropContext.value?.i + 1))
     // 不处理和自己相关的
-    let dropValueChildrenKey = getChildrenKey(dropValueItem)
-    let valueItemChildrenKey = getChildrenKey(valueItem)
-    if(!await isImInFamilyOfTarget(valueItem, valueItemChildrenKey, dropValueItem)){
-        value.datas.splice(value.i, 1)
+    if(!await isImInFamilyOfTarget(valueItem, getChildrenKey(valueItem), dropValueItem)){
+        let treeData = extend(true, [], middleware.value)
+        let parent
         if(isLeft){
-            dropValue.datas.splice(ind, 0, valueItem)
-        }else{
-            // 不拖拽到自己的子节点中
-            if(!(dropValueItem[dropValueChildrenKey] instanceof Array)){
-                dropValueItem[dropValueChildrenKey] = []
-            }
-            dropValueItem[dropValueChildrenKey].unshift(valueItem)
+            parent = await utils.iterate(treeData, d=>getChildrenKey(d), (d, i, datas, parent)=>{
+                if(getKey(d) === getKey(dropValueItem)){
+                    return parent
+                }
+            })
         }
-        emit('update:datas', middleware.value)
+        let toValueItem = isLeft ? parent : dropValueItem
+        await fromParentToParent(treeData, value.parent, value.i, toValueItem, ind)
+
+        emit('change', {
+            treeData,
+            value: valueItem,
+            dropValue: toValueItem,
+            index: ind,
+            parent: value.parent,
+        })
+        emit('update:datas', treeData)
     }
 }
 </script>
@@ -126,7 +160,7 @@ async function handleDrop(e){
             &::after{
                 content: '';
                 position: absolute;
-                left: .3em;
+                left: .4em;
                 top: 0;
                 height: 100%;
                 border-left: 1px dashed dimgray;

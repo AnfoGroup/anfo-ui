@@ -22,21 +22,25 @@
                         key: getKey(item,),
                         layer,
                         hasChildren: getChildren(item).length > 0,
-                        toggleSubLoops: (_item = item, _i = i)=>handleToggleSubLoops(_item,  _i),
+                        prevHasChildren: middleware[i - 1] && getChildren(middleware[i - 1]).length > 0,
+                        toggle: (_item = item, _i = i)=>handleToggleSubLoops(_item,  _i),
                         isFold: folds[getKey(item,)],
-                    }:{}"></slot>
+                        isLast: (isLast || !parent) && !(getChildren(item).length > 0) && i === middleware.length - 1,
+                        isFirst: i === 0 && !parent,
+                        parent,
+                    } : { }"></slot>
                 </div>
                 <transition @after-enter="handleAfterEnter" name="fade-height" mode="out-in">
                     <div v-show="!folds[getKey(item)] && getChildren(item).length > 0"
                         class="sub-loop-wrapper">
                         <anfo-loop
+                            v-bind="$props"
                             class="sub-loop"
                             :childrenKey="childrenKey"
-                            :dataKey="dataKey"
-                            :layer="(+layer)+1"
                             v-model:datas="item[getChildrenKey(item)]"
-                            :container-class="containerClass"
-                            :container-style="containerStyle">
+
+                            :parent="item"
+                            :is-last="(isLast || !parent) && i === middleware.length - 1">
                             <template v-slot="item">
                                 <slot v-bind="item"></slot>
                             </template>

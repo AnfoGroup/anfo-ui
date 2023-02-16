@@ -7,12 +7,18 @@
         @drop-drag-enter="handleDragEnter"
         @drop-drag-start="handleDragStart"
         @drop-drag-finish="_draggingKey = null"
-        :class="['page orderable-container', isHorizontal ? 'h' : 'v']">
+        :class="['page orderable-container align-stretch', isHorizontal ? 'h' : 'v']">
         <transition-group :name="transitionName">
             <div v-for="(d, i) in middleware" :key="dataKey(d)"
                 v-drag:[channel]="{ d, i }"
-                :class="['orderable-item', getKey(d) === _draggingKey ? 'is-current':'']">
-                <div class="item-content">
+                :class="[
+                    'orderable-item',
+                    isHorizontal ? 'height-full' : 'width-full',
+                    getKey(d) === _draggingKey ? 'is-current':'']">
+                <div :class="[
+                    'item-content',
+                    isHorizontal ? 'height-full' : 'width-full',
+                ]">
                     <slot :data="d" :i="i"></slot>
                 </div>
             </div>

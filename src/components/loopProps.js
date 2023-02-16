@@ -27,4 +27,9 @@ export default {
         type: String,
         default: 'anfo-move-default',
     },
+
+    // islast 内部使用，类似layer，不需要传入，表示迭代的最后一层
+    isLast: Boolean,
+    // parent
+    parent: Object,
 }

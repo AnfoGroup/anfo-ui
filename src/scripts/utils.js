@@ -105,7 +105,7 @@ export default {
     },
     async iterateMap(datas, childrenKey, func){
         let ret = []
-        this.iterate(datas, childrenKey, d=>{
+        await this.iterate(datas, childrenKey, d=>{
             ret.push(func(d))
         })
         return ret

@@ -15,6 +15,7 @@ import utilsScript from '@/scripts/utils'
 import loadingDirective from '@/directives/loading'
 import dragDirective from '@/directives/drag'
 import moveDirective from '@/directives/move'
+import focusDirective from '@/directives/focus'
 
 import '@/styles/utils.scss'
 
@@ -73,6 +74,7 @@ let anfoUI = {
         app.use(loadingDirective, { loadingIcon })
         app.use(dragDirective)
         app.use(moveDirective)
+        app.use(focusDirective)
         
         app.config.globalProperties.$anfoUI = anfoUI
         app.config.globalProperties.$anfoUIConfig = anfoUI

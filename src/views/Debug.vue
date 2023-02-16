@@ -129,8 +129,14 @@ let treeDatas = ref([{
   }, {
     label: 'equal',
     children: [{
-        label: 'dd'
-    }]
+        label: '11'
+    },{
+        label: 'd22'
+    },{
+        label: '33'
+    },{
+        label: '44'
+    },]
   }],
 }, {
   label: 'hello2'
