@@ -38,6 +38,7 @@
                             class="sub-loop"
                             :childrenKey="childrenKey"
                             v-model:datas="item[getChildrenKey(item)]"
+                            :layer="(+layer) + 1"
 
                             :parent="item"
                             :is-last="(isLast || !parent) && i === middleware.length - 1">
