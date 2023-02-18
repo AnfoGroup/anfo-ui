@@ -201,7 +201,7 @@ async function handleDrop(e){
             transition: opacity .3s, transform .3s;
         }
         &.is-drop-active{
-            background: whitesmoke;
+            background: rgba(0, 0, 0, .05);
             
             &.is-bottom{
                 &::before{
