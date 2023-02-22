@@ -226,6 +226,12 @@ $overflowValues: (
     .overflow-#{$val}{
         overflow: $val !important;
     }
+    .overflow-x-#{$val}{
+        overflow-x: $val !important;
+    }
+    .overflow-y-#{$val}{
+        overflow-y: $val !important;
+    }
 }
 
 $flexLengths: (0, 1, 2, 3, 4, 5, 6, 7, 8);
@@ -422,6 +428,8 @@ $pointerEventsItems: (
 }
 @each $val in $overflowValues{
     @include c(overflow-#{$val});
+    @include c(overflow-x-#{$val});
+    @include c(overflow-y-#{$val});
 }
 @each $val in $justifyItems{
     @include c(justify-#{$val});
