@@ -7,7 +7,7 @@
             ...containerStyle,
         }">
         <transition-group :name="transitionName" appear>
-            <div
+            <template
                 v-for="(item, i) in middleware"
                 :key="getKey(item) || i">
                 <div class="h h-sem align-stretch">
@@ -48,7 +48,7 @@
                         </anfo-loop>
                     </div>
                 </transition>
-            </div>
+            </template>
         </transition-group>
     </div>
 </template>
@@ -59,7 +59,9 @@ import { CaretRightOutlined } from '@ant-design/icons-vue'
 import utils from '@/scripts/utils'
 import loopProps from './loopProps'
 
-let props = defineProps(loopProps)
+let props = defineProps({
+    ...loopProps,
+})
 
 let container = ref(null)
 

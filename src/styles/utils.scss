@@ -305,10 +305,12 @@ $alignItems: (
 
 .rel{
     position: relative;
-
-    .abs{
-        position: absolute;
-    }
+}
+.abs{
+    position: absolute;
+}
+.sticky{
+    position: sticky;
 }
 @each $k, $v in $sizes{
     .r-#{$k}{

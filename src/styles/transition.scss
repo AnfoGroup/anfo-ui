@@ -32,7 +32,7 @@
 .anfo-fade-tr-enter-from,
 .anfo-fade-tr-leave-to {
   opacity: 0;
-  transform: translate(32px, 0);
+  transform: translateX(32px);
 }
 
 .anfo-move-default-move, /* 对移动中的元素应用的过渡 */
@@ -44,7 +44,7 @@
 .anfo-move-default-enter-from,
 .anfo-move-default-leave-to {
   opacity: 0;
-  transform: translateX(30px);
+  // transform: translateX(32px);
 }
 
 /* 确保将离开的元素从布局流中删除

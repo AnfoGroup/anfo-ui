@@ -74,10 +74,13 @@ export default {
 
     createAsyncComputed(watcher, asyncFunction, initValue, options){
         let ret = ref(initValue)
-        watch(watcher, async ()=>{
-            ret.value = await asyncFunction?.()
+        watch(watcher, async (val, old, ...rest)=>{
+            if(val !== old){
+                ret.value = await asyncFunction?.(val, old, ...rest)
+            }
         }, {
             immediate: true,
+            deep: true,
             ...options
         })
         return ret
