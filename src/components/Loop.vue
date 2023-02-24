@@ -6,7 +6,7 @@
             '--layer': layer,
             ...containerStyle,
         }">
-        <transition-group :name="transitionName" appear>
+        <transition-group @before-leave="handleBeforeLeave" :name="transitionName" appear>
             <template
                 v-for="(item, i) in middleware"
                 :key="getKey(item) || i">
@@ -137,6 +137,14 @@ let emit = defineEmits(['update:datas'])
 let middleware = utils.createMiddleware(()=>props.datas, async val=>{
     emit('update:datas', val)
 })
+
+function handleBeforeLeave(el){
+    const {marginLeft, marginTop, width, height} = window.getComputedStyle(el)
+    el.style.left = `${el.offsetLeft - parseFloat(marginLeft, 10)}px`
+    el.style.top = `${el.offsetTop - parseFloat(marginTop, 10)}px`
+    el.style.width = width
+    el.style.height = height
+}
 </script>
 
 <style lang="scss" scoped>

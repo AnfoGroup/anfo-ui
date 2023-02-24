@@ -198,6 +198,24 @@ $sizes: (
     }
 }
 
+// 这里的width / height : 0 可以改成 min-width min-height : 0
+// 为了防止父 flex容器被overflow的东西撑开
+// 可以使用overflow
+// overflow的问题在于
+/*
+    1 多层嵌套的伸缩flex容器会需要每一层都加overflow
+    2 容器中的box-shadow会被隐藏掉。
+*/
+.h{
+    &>.f-1{
+        width: 0;
+    }
+}
+.v{
+    &>.f-1{
+        height: 0;
+    }
+}
 .h{
     display: flex;
     align-items: center;
@@ -213,6 +231,11 @@ $sizes: (
 .vinline{
     display: inline-flex;
     flex-direction: column;
+}
+.center{
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 $overflowValues: (
@@ -308,6 +331,9 @@ $alignItems: (
 }
 .abs{
     position: absolute;
+}
+.fixed{
+    position: fixed;
 }
 .sticky{
     position: sticky;

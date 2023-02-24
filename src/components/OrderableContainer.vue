@@ -8,9 +8,10 @@
         @drop-drag-start="handleDragStart"
         @drop-drag-finish="_draggingKey = null"
         :class="['page orderable-container align-stretch', isHorizontal ? 'h' : 'v']">
-        <transition-group :name="transitionName">
+        <transition-group @before-leave="handleBeforeLeave" :name="transitionName">
             <div v-for="(d, i) in middleware" :key="dataKey(d)"
                 v-drag:[channel]="{ d, i }"
+                @drag-finish="handleDragFinish"
                 :class="[
                     'orderable-item',
                     isHorizontal ? 'height-full' : 'width-full',
@@ -64,7 +65,7 @@ let props = defineProps({
         default: false,
     },
 })
-let emit = defineEmits(['update:datas'])
+let emit = defineEmits(['change', 'update:datas'])
 
 let container = ref(null)
 let middleware = utils.createMiddleware(()=>{
@@ -81,6 +82,10 @@ let _currentDragingIndex = -1
 let _offsetRels = []
 let _offsetRelKey = computed(()=>props.isHorizontal ? 'offsetLeft' : 'offsetTop')
 let _heightRelKey = computed(()=>props.isHorizontal ? 'offsetWidth' : 'offsetHeight')
+
+function handleDragFinish(e){
+    emit('change', e.getValue('d'), _currentDragingIndex)
+}
 
 function getKey(data){
     return props.dataKey(data)
@@ -155,6 +160,14 @@ function handleDragMove(e){
             middleware.value = datas
         }
     }
+}
+
+function handleBeforeLeave(el){
+    const {marginLeft, marginTop, width, height} = window.getComputedStyle(el)
+    el.style.left = `${el.offsetLeft - parseFloat(marginLeft, 10)}px`
+    el.style.top = `${el.offsetTop - parseFloat(marginTop, 10)}px`
+    el.style.width = width
+    el.style.height = height
 }
 </script>
 

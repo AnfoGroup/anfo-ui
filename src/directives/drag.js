@@ -83,10 +83,39 @@ function createDragContext(el, { value, oldValue, arg, modifiers, instance, dir 
     }
     dragContexts[id] = context
 
-
+    context.handleMouseDownCapture = e=>{
+        if(e.button === 0){
+            context._isMouseDownCapture = true
+            context._mouseMoveCountCapture = 0
+        }
+    }
+    context.handleMouseMoveCapture = e=>{
+        if(e.button === 0){
+            let { newEl } = context || {}
+        
+            if(context._isMouseDownCapture){
+                if(!newEl.parentElement){
+                    if(context._mouseMoveCountCapture < clickThreshold){
+                        context._mouseMoveCountCapture += 1
+                    }else{
+                        
+                    }
+                }
+            }
+        }
+    }
+    context.handleMouseUpCapture = e=>{
+        if(e.button === 0){
+            if(context._isMouseDownCapture){
+                context._isMouseDownCapture = false
+                if(context._mouseMoveCountCapture < clickThreshold){
+                    context._bubbleClickEvent = true
+                }
+            }
+        }
+    }
     context.handleMouseDown = e=>{
         if(e.button === 0){
-            context._bubbleClickEvent = false
             context._isMouseDown = true
             let { el, newEl, channel, event } = context || {}
             newEl.remove()
@@ -101,7 +130,12 @@ function createDragContext(el, { value, oldValue, arg, modifiers, instance, dir 
             // 记录当前el的屏幕xy
             Object.assign(newEl.style, {
                 top: `${context._currentY}px`,
-                left: `${context._currentX}px`
+                left: `${context._currentX}px`,
+            })
+
+            Object.assign(context.entityEl.style, {
+                width: `${rect.width}px`,
+                height: `${rect.height}px`,
             })
             // event.emit(EVENT_DRAG_START)
             // dropContexts.filter(d=>d.channel === channel).forEach(d=>d.event.emit(EVENT_DRAG_START, context))
@@ -113,7 +147,7 @@ function createDragContext(el, { value, oldValue, arg, modifiers, instance, dir 
         }
     }
     context.handleMouseMove = e=>{
-        let { newEl, opacityWrapper, channel, event } = context || {}
+        let { newEl, opacityWrapper, entityEl, channel, event } = context || {}
         
         if(context._isMouseDown){
             if(!newEl.parentElement){
@@ -131,9 +165,13 @@ function createDragContext(el, { value, oldValue, arg, modifiers, instance, dir 
                     document.querySelector('body').appendChild(newEl)
 
                     // 确保transition能运转
-                    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+                    // requestAnimationFrame(()=>requestAnimationFrame(()=>{
                         // opacityWrapper.style.opacity = .6
-                    }))
+                        // Object.assign(context.entityEl, {
+                            // width: `${context.originWidth}px`,
+                            // height: `${context.originHeight}px`,
+                        // })
+                    // }))
                 }
             }
             if(newEl.parentElement){
@@ -239,8 +277,7 @@ function createDragContext(el, { value, oldValue, arg, modifiers, instance, dir 
                 context._isMouseDown = false
                 
                 if(context._mouseMoveCount < clickThreshold){
-                    // event.emit(EVENT_CLICK, e)
-                    context._bubbleClickEvent = true
+
                 }else{
                     let dragRefPosition = [e.clientX, e.clientY]
                     let drops = dragDirective.getDroppables(dragRefPosition, channel)
@@ -311,7 +348,7 @@ function createDragContext(el, { value, oldValue, arg, modifiers, instance, dir 
     }
     context.handleClickCapture = e=>{
         if(context._bubbleClickEvent){
-
+            context._bubbleClickEvent = false
         }else{
             e.stopPropagation()
         }
@@ -366,7 +403,8 @@ let dragDirective = {
             let y = rect.top
             let width = dropElement.offsetWidth
             let height = dropElement.offsetHeight
-            d.offset = [position[0] - x, position[1] - y]
+            // 这里加上元素的滚动距离，因为元素可能有滚动条
+            d.offset = [position[0] - x + dropElement.scrollLeft, position[1] - y + dropElement.scrollTop]
             // 取中心点
             if(isPointInRect(position, [x, y, width, height])){
                 ins.push(d)
@@ -466,9 +504,14 @@ let dragDirective = {
         // event.on(EVENT_CLICK, e=>{
         // })
         el.dragContextID = context.id
-        el.addEventListener('mousedown', context.handleMouseDown)
         el.addEventListener('click', context.handleClickCapture, true)
+        // 做点击click的判断，使用capture分开 是因为嵌套了drag指令的两个容器会影响下面容器的点击时间
+        el.addEventListener('mousedown', context.handleMouseDownCapture, true)
+        document.addEventListener('mouseup', context.handleMouseUpCapture, true)
+        document.addEventListener('mousemove', context.handleMouseMoveCapture, true)
+
         document.addEventListener('mousemove', context.handleMouseMove)
+        el.addEventListener('mousedown', context.handleMouseDown)
         document.addEventListener('mouseup', context.handleMouseUp)
         document.addEventListener('contextmenu', context.handleContextMenu, true)
     },
