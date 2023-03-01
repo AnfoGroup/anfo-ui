@@ -13,9 +13,11 @@
 
 <anfo-orderable-container is-leavable is-enterable v-model:datas="exDatas" class="v-m">
     <template #="data">
-        <div class="h justify-center" :style="{width: '50px',height: '50px', background: 'lightgray',borderRadius: '5px'}">
-            {{ data.data }}
-        </div>
+        <anfo-transition-focus v-model:value="isFocused[data.i]">
+            <div @click="isFocused[data.i] = true" class="h justify-center" :style="{width: '50px',height: '50px', background: 'lightgray',borderRadius: '5px'}">
+                {{ data.data }} 
+            </div>
+        </anfo-transition-focus>
     </template>
 </anfo-orderable-container>
 
@@ -152,6 +154,8 @@ let treeDatas = ref([{
 }])
 
 let isLoading = ref(true)
+
+let isFocused = ref([])
 
 setInterval(()=>isLoading.value = !isLoading.value, 1000)
 </script>

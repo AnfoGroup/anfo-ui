@@ -7,6 +7,7 @@ import SpinComponent from '@/components/Spin'
 import LoopComponent from '@/components/Loop'
 import TreeComponent from '@/components/Tree'
 import GridComponent from '@/components/Grid'
+import TransitionFocusComponent from '@/components/transitions/Focus'
 
 import Pagination from '@/components/Pagination'
 
@@ -72,6 +73,7 @@ let anfoUI = {
         component('loop', LoopComponent)
         component('tree', TreeComponent)
         component('grid', GridComponent)
+        component('transition-focus', TransitionFocusComponent)
 
         app.use(loadingDirective, { loadingIcon })
         app.use(dragDirective)
@@ -100,6 +102,7 @@ let anfoUI = {
     Loop: LoopComponent,
     Tree: TreeComponent,
     Grid: GridComponent,
+    TransitionFocus: TransitionFocusComponent,
 
     useList(){
         let instance = getCurrentInstance()
@@ -119,5 +122,6 @@ export const Spin = anfoUI.Spin
 export const Loop = anfoUI.Loop
 export const Tree = anfoUI.Tree
 export const Grid = anfoUI.Grid
+export const TransitionFocus = anfoUI.TransitionFocus
 export const useList = anfoUI.useList
 export const utils = utilsScript
