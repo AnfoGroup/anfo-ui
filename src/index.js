@@ -6,6 +6,7 @@ import ResizeContainerComponent from '@/components/ResizeContainer'
 import SpinComponent from '@/components/Spin'
 import LoopComponent from '@/components/Loop'
 import TreeComponent from '@/components/Tree'
+import GridComponent from '@/components/Grid'
 
 import Pagination from '@/components/Pagination'
 
@@ -70,6 +71,7 @@ let anfoUI = {
         component('spin', SpinComponent)
         component('loop', LoopComponent)
         component('tree', TreeComponent)
+        component('grid', GridComponent)
 
         app.use(loadingDirective, { loadingIcon })
         app.use(dragDirective)
@@ -97,6 +99,7 @@ let anfoUI = {
     Spin: SpinComponent,
     Loop: LoopComponent,
     Tree: TreeComponent,
+    Grid: GridComponent,
 
     useList(){
         let instance = getCurrentInstance()
@@ -115,5 +118,6 @@ export const ScrollContainer = anfoUI.ScrollContainer
 export const Spin = anfoUI.Spin
 export const Loop = anfoUI.Loop
 export const Tree = anfoUI.Tree
+export const Grid = anfoUI.Grid
 export const useList = anfoUI.useList
 export const utils = utilsScript

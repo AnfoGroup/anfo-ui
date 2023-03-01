@@ -30,6 +30,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import utils from '@/scripts/utils'
+import extend from 'extend'
 
 let props = defineProps({
     datas: {
@@ -69,8 +70,7 @@ let emit = defineEmits(['change', 'update:datas'])
 
 let container = ref(null)
 let middleware = utils.createMiddleware(()=>{
-    let datas = props.datas
-    return JSON.parse(JSON.stringify(datas))
+    return extend(true, [], props.datas)
 }, val=>emit('update:datas', val))
 
 // 非计算属性，维护时需要考虑数据的同步

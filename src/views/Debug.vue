@@ -1,7 +1,16 @@
 <template>
     <div class="v-m p-l">
         <h1>AnfoUI</h1>
-{{ exDatas }}
+        <div>
+            <anfo-grid :datas="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" min-size="100px">
+                <template #="{item}">
+                    <div>
+                        {{ item }}
+                    </div>
+                </template>
+            </anfo-grid>
+        </div>
+
 <anfo-orderable-container is-leavable is-enterable v-model:datas="exDatas" class="v-m">
     <template #="data">
         <div class="h justify-center" :style="{width: '50px',height: '50px', background: 'lightgray',borderRadius: '5px'}">
