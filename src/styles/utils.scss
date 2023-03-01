@@ -206,16 +206,17 @@ $sizes: (
     1 多层嵌套的伸缩flex容器会需要每一层都加overflow
     2 容器中的box-shadow会被隐藏掉。
 */
-.h{
-    &>.f-1{
-        width: 0;
-    }
-}
-.v{
-    &>.f-1{
-        height: 0;
-    }
-}
+// 因为有时候需要被撑开、所以需要时用户自己添加width/height-0
+// .h{
+//     &>.f-1{
+//         width: 0;
+//     }
+// }
+// .v{
+//     &>.f-1{
+//         height: 0;
+//     }
+// }
 .h{
     display: flex;
     align-items: center;

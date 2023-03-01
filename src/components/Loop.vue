@@ -7,7 +7,7 @@
             ...containerStyle,
         }">
         <transition-group @before-leave="handleBeforeLeave" :name="transitionName" appear>
-            <template
+            <div
                 v-for="(item, i) in middleware"
                 :key="getKey(item) || i">
                 <div class="h h-sem align-stretch">
@@ -48,7 +48,7 @@
                         </anfo-loop>
                     </div>
                 </transition>
-            </template>
+            </div>
         </transition-group>
     </div>
 </template>

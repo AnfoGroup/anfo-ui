@@ -1,6 +1,6 @@
 {
   "name": "@anfo/ui",
-  "version": "1.1.6",
+  "version": "1.1.9",
   "type": "module",
   "files": [
     "dist"
@@ -12,7 +12,8 @@
       "import": "./dist/anfoUI.js",
       "require": "./dist/anfoUI.umd.cjs"
     },
-    "./style": "./dist/style.css"
+    "./style": "./dist/style.css",
+    "./dist/style.css": "./dist/style.css"
   },
   "scripts": {
     "dev": "vite -c vite.config.dev.js",

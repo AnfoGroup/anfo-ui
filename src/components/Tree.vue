@@ -8,13 +8,14 @@
             <div
                 v-drag="data"
                 v-drop="data"
-                :class="['touch-area h f-1', ]"
+                :class="['touch-area rel h f-1', ]"
                 @drop-drag-move="handleDragMove"
                 @drop-drag-finish-with-drop="handleDrop">
+                <div class="abs t-0 l-0 size-full area-indicator"></div>
                 <div class="h h-s f-1">
-                    <div class="h p-l-xs" style="align-self: stretch" v-if="data.layer > 0 && !data.hasChildren">
+                    <!-- <div class="h p-l-xs" style="align-self: stretch" v-if="data.layer > 0 && !data.hasChildren">
                         <div class="is-sub"></div>
-                    </div>
+                    </div> -->
                     <CaretRightOutlined
                         @click="data.toggle?.()"
                         class="clickable shrink-0" v-if="data.hasChildren" :style="{
@@ -56,7 +57,8 @@ let middleware = utils.createMiddleware(()=>extend(true, [], props.datas))
 
 function getTypeByOffset(el, offset){
     return [
-        offset[0] < el.offsetWidth / 4, // isLeft
+        // offset[0] < el.offsetWidth / 4, // isLeft
+        offset[0] < 64, // isLeft
         offset[1] < el.offsetHeight / 4, // isTop
     ]
 }
@@ -169,6 +171,8 @@ async function handleDrop(e){
     }
 
     .touch-area{
+        border-radius: 5px;
+        overflow: hidden;
         position: relative;
         transition: all .3s;
         // 防止拖拽时因为两个area边界粘连导致有可能同时被触发
@@ -177,7 +181,7 @@ async function handleDrop(e){
         &>div{
             transition: opacity .3s;
         }
-
+        
         &::after{
             content: "";
             position: absolute;
@@ -187,7 +191,7 @@ async function handleDrop(e){
             height: 2px;
             background: dimgray;
             opacity: 0;
-            transition: opacity .3s, transform .3s;
+            // transition: opacity .3s, transform .3s;
         }
         &::before{
             content: "";
@@ -198,10 +202,21 @@ async function handleDrop(e){
             height: 2px;
             background: dimgray;
             opacity: 0;
-            transition: opacity .3s, transform .3s;
+            // transition: opacity .3s, transform .3s;
         }
+
+        .area-indicator{
+            transition: opacity .3s;
+            opacity: 0;
+            background: linear-gradient(to right, rgba(0, 0, 0, .03) 56px, rgba(0, 0, 0, .1) 72px)
+        }
+
         &.is-drop-active{
             background: rgba(0, 0, 0, .05);
+
+            .area-indicator{
+                opacity: 1;
+            }
             
             &.is-bottom{
                 &::before{
@@ -221,10 +236,10 @@ async function handleDrop(e){
             }
             &.is-right{
                 &::before{
-                        transform: translateX(5%) scaleX(.9);
+                    transform: translateX(64px);
                 }
                 &::after{
-                    transform: translateX(5%) scaleX(.9);
+                    transform: translateX(64px);
                 }
             }
 
