@@ -31,7 +31,7 @@
 
         <anfo-tree v-model:datas="treeDatas" :data-key="d=>d?.label">
             <template #="{ item }">
-                <div>
+                <div @click="handleClickTreeItem()">
                     {{ item.label }}
                 </div>
             </template>
@@ -129,6 +129,10 @@ scrollContext.refreshDatas()
 let exDatas = ref([1, 2, 3])
 let datas = ref([{a: 1}, {a: 2}, {a: 3}, {a: 4}])
 let datas2 = utils.createMiddleware(datas, async val=>{await new Promise(r=>setTimeout(r, 1000));datas.value = val}, )
+
+function handleClickTreeItem(){
+    console.debug('tree item clicked')
+}
 
 setTimeout(()=>datas2.value[1].a = 100, 1000)
 setTimeout(()=>datas.value[2].a = 99999, 2000)

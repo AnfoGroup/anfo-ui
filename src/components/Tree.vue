@@ -11,7 +11,7 @@
                 :class="['touch-area rel h f-1', ]"
                 @drop-drag-move="handleDragMove"
                 @drop-drag-finish-with-drop="handleDrop">
-                <div class="abs t-0 l-0 size-full area-indicator"></div>
+                <div class="abs t-0 l-0 size-full area-indicator pe-none"></div>
                 <div class="h h-s f-1">
                     <!-- <div class="h p-l-xs" style="align-self: stretch" v-if="data.layer > 0 && !data.hasChildren">
                         <div class="is-sub"></div>
