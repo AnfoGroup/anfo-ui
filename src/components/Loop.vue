@@ -37,7 +37,7 @@
                             v-bind="$props"
                             class="sub-loop"
                             :childrenKey="childrenKey"
-                            v-model:datas="item[getChildrenKey(item)]"
+                            v-model:datas="item[childrenKey]"
                             :layer="(+layer) + 1"
 
                             :parent="item"
@@ -65,14 +65,6 @@ let props = defineProps({
 
 let container = ref(null)
 
-// 当前的折叠状态
-// let folds = ref((props.datas || []).reduce((t, d)=>{
-//     let children = getChildren(d)
-//     if(children.length > 0 && children.every(d=>d.state === '!!!!!!here!')){
-//         t[d._id] = true
-//     }
-//     return t
-// }, {}))
 let folds = ref({})
 
 function handleAfterEnter(el){
@@ -116,21 +108,12 @@ async function handleToggleSubLoops(item , i){
     }
 }
 
-// function getDataKey(item){
-//     return props.dataKey instanceof Function ? props.dataKey(item, middleware.value)
-//         : props.dataKey
-// }
 function getKey(item){
     return props.dataKey instanceof Function ? props.dataKey(item)
         : item?.[props.dataKey]
-    // return item?.[getDataKey(item)]
-}
-function getChildrenKey(item){
-    return props.childrenKey instanceof Function ? props.childrenKey(item, middleware.value)
-        : props.childrenKey
 }
 function getChildren(item){
-    return item[getChildrenKey(item)] || []
+    return item?.[props.childrenKey] || []
 }
 
 let emit = defineEmits(['update:datas'])

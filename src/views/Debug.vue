@@ -1,5 +1,28 @@
 <template>
     <div class="v-m p-l">
+        <List #="{ data }">
+            <div class="v-m">
+                <div v-for="d in data">
+                    {{ d }}
+                </div>
+            </div>
+        </List>
+
+        <Pagination>
+            <div class="v-m">
+                <div v-for="d in data">
+                    {{ d }}
+                </div>
+            </div>
+        </Pagination>
+
+        <ScrollList #="{ data }">
+            <div class="v-m">
+                <div v-for="d in data">
+                    {{ d }}
+                </div>
+            </div>
+        </ScrollList>
         <h1>AnfoUI</h1>
         <div>
             <anfo-grid :datas="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" min-size="100px">
@@ -102,10 +125,18 @@
 </template>
 
 <script setup>
-import { useList, utils } from '@/index'
-import { reactive, ref } from 'vue'
+import { useList, usePagination, useScroll, utils } from '@/index'
+import { ref } from 'vue'
 
 let list = useList()
+let { List, Pagination } = usePagination(()=>[1, 2, 3], {
+    dataMapper: d=>({total: d.length, data: d.concat(Date.now())}),
+    pageSize: 1
+})
+let { List: ScrollList, } = useScroll(()=>new Array(100).fill(0), {
+    scroller: ()=>document
+})
+
 let paginationContext = list.pagination.createContext({
   props: {
     pageSize: 3,

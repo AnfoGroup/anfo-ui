@@ -8,6 +8,7 @@ export default defineConfig(
   mergeConfig(defaultConfig, {
     build: {
       lib: {
+        formats: ['es', 'umd', 'iife'],
         entry: path.resolve(__dirname, 'src/index.js'),
         name: 'AnfoUI',
         fileName: 'anfoUI',

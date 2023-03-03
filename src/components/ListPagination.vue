@@ -4,11 +4,11 @@
         <!-- <a-pagination v-if="context?.totalPage?.value > 1" size="small" v-model:current="context.data.page" v-model:pageSize="context.data.pageSize" :total="context.data.total"></a-pagination> -->
         <!-- {{$slots.pagination && $slots.pagination()}} -->
         <transition :name="transitionName" appear>
-            <slot v-if="$slots.pagination" name="pagination" :context="context" :total-page="context?.totalPage?.value" :current="context.data.page" :pageSize="context?.data?.pageSize" :total="context?.data?.total"></slot>
+            <slot v-if="$slots.pagination" :Pagination="$anfoUIListPagination" name="pagination" :context="context" :total-page="context?.totalPage?.value" :current="context.data.page" :pageSize="context?.data?.pageSize" :total="context?.data?.total"></slot>
             <component :is="$anfoUIListPagination" v-else-if="$anfoUIListPagination && context?.totalPage?.value > 1" v-model:current="context.data.page" v-model:pageSize="context.data.pageSize" :total="context.data.total" />
         </transition>
         <!-- <component v-else-if="$anfoUIListPagination" :is="$anfoUIListPagination" :context="context" :total-page="context?.totalPage?.value" v-model:current="context.data.page" v-model:pageSize="context.data.pageSize" :total="context?.data?.total" /> -->
-        <div class="v-xs" v-loading="context?.data?.isLoading">
+        <div v-loading="context?.data?.isLoading">
             <transition :name="transitionName" mode="out-in" appear>
                 <div v-if="context?.data?.datas?.length === 0 && noDataText" class="desc">{{noDataText}}</div>
                 <template v-else>

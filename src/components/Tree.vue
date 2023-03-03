@@ -42,15 +42,11 @@ let props = defineProps({
 function getKey(item){
     return props.dataKey instanceof Function ? props.dataKey(item)
         : item?.[props.dataKey]
-    // return item?.[getDataKey(item)]
-}
-function getChildrenKey(item){
-    return props.childrenKey instanceof Function ? props.childrenKey(item, middleware.value)
-        : props.childrenKey
 }
 function getChildren(item){
-    return item[getChildrenKey(item)] || []
+    return item?.[props.childrenKey] || []
 }
+
 let emit = defineEmits(['update:datas', 'change'])
 
 let middleware = utils.createMiddleware(()=>extend(true, [], props.datas))
@@ -72,7 +68,7 @@ async function handleDragMove(e){
     let value = e.getValue()
     let valueItem = value.item
     el.classList.remove('is-top', 'is-left', 'is-right', 'is-bottom')
-    if(!await isImInFamilyOfTarget(valueItem, getChildrenKey(valueItem), dropValueItem)){
+    if(!await isImInFamilyOfTarget(valueItem, props.childrenKey, dropValueItem)){
         let target = el
         let [ isLeft, isTop ] = getTypeByOffset(target, offset)
         if(isLeft || !isTop){
@@ -95,12 +91,12 @@ async function isImInFamilyOfTarget(target, targetChildrenKey, me){
 
 async function fromParentToParent(treeData, from, fromIndex, to, toIndex){
     let offset = 0
-    from = await utils.iterate(treeData, d=>getChildrenKey(d), d=>{
+    from = await utils.iterate(treeData, props.childrenKey, d=>{
         if(getKey(d) === (from && getKey(from))){
             return d
         }
     })
-    to = await utils.iterate(treeData, d=>getChildrenKey(d), d=>{
+    to = await utils.iterate(treeData, props.childrenKey, d=>{
         if(getKey(d) === (to && getKey(to))){
             return d
         }
@@ -112,8 +108,8 @@ async function fromParentToParent(treeData, from, fromIndex, to, toIndex){
         }
     }
     // getchildren 为空，表示顶层
-    if(to && !Array.isArray(to[getChildrenKey(to)])){
-        to[getChildrenKey(to)] = []
+    if(to && !Array.isArray(to[props.childrenKey])){
+        to[props.childrenKey] = []
     }
     ;(to ? getChildren(to) : treeData).splice(offset + toIndex, 0,
         ...(from ? getChildren(from) : treeData).splice(fromIndex, 1))
@@ -128,11 +124,11 @@ async function handleDrop(e){
     let [ isLeft, isTop ] = getTypeByOffset(dropContext.el, e.getData('offset'))
     let ind = Math.min(dropValue.datas?.length, Math.max(0, isTop ? dropContext.value?.i : dropContext.value?.i + 1))
     // 不处理和自己相关的
-    if(!await isImInFamilyOfTarget(valueItem, getChildrenKey(valueItem), dropValueItem)){
+    if(!await isImInFamilyOfTarget(valueItem, props.childrenKey, dropValueItem)){
         let treeData = extend(true, [], middleware.value)
         let parent
         if(isLeft){
-            parent = await utils.iterate(treeData, d=>getChildrenKey(d), (d, i, datas, parent)=>{
+            parent = await utils.iterate(treeData, props.childrenKey, (d, i, datas, parent)=>{
                 if(getKey(d) === getKey(dropValueItem)){
                     return parent
                 }

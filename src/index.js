@@ -8,6 +8,7 @@ import LoopComponent from '@/components/Loop'
 import TreeComponent from '@/components/Tree'
 import GridComponent from '@/components/Grid'
 import TransitionFocusComponent from '@/components/transitions/Focus'
+import { getUsePagination, getUseScroll } from '@/components/list'
 
 import Pagination from '@/components/Pagination'
 
@@ -54,12 +55,21 @@ let anfoUI = {
     }
     */
     install( app, config = {} ){
-
-        let { loading, list } = config || {}
-        let { icon: loadingIcon } = loading || {}
-        let { pagination: paginationList, scroll: scrollList } = list || {}
-        let { paginationComponent, dataMapper: paginationDataMapper } = paginationList || {}
-        let { dataMapper: scrollDataMapper } = scrollList || {}
+        let {
+            loading: { icon: loadingIcon } = {},
+            loading,
+            list: {
+                scroll: {
+                    dataMapper: scrollDataMapper
+                } = {},
+                scroll: scrollList,
+                pagination: {
+                    paginationComponent,
+                    dataMapper: paginationDataMapper
+                } = {},
+                pagination: paginationList,
+            } = {}
+        } = config || {}
 
         function component(name, com){
             app.component(`anfo-${name}`, com)
@@ -89,8 +99,11 @@ let anfoUI = {
             pagination: paginationDataMapper,
             scroll: scrollDataMapper,
         } })
+
         app.config.globalProperties.$anfoList = listUtils
         app.config.globalProperties.$anfoUtils = utilsScript
+        app.config.globalProperties.$anfoUsePagination = getUsePagination(config)
+        app.config.globalProperties.$anfoUseScroll = getUseScroll(config)
     },
 
     ListPagination: ListPaginationComponent,
@@ -104,6 +117,14 @@ let anfoUI = {
     Grid: GridComponent,
     TransitionFocus: TransitionFocusComponent,
 
+    usePagination(...rest){
+        let instance = getCurrentInstance()
+        return instance.appContext.config.globalProperties.$anfoUsePagination(...rest)
+    },
+    useScroll(...rest){
+        let instance = getCurrentInstance()
+        return instance.appContext.config.globalProperties.$anfoUseScroll(...rest)
+    },
     useList(){
         let instance = getCurrentInstance()
         return instance.appContext.config.globalProperties.$anfoList
@@ -124,4 +145,6 @@ export const Tree = anfoUI.Tree
 export const Grid = anfoUI.Grid
 export const TransitionFocus = anfoUI.TransitionFocus
 export const useList = anfoUI.useList
+export const usePagination = anfoUI.usePagination
+export const useScroll = anfoUI.useScroll
 export const utils = utilsScript

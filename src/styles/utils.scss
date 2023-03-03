@@ -239,6 +239,24 @@ $sizes: (
     justify-content: center;
 }
 
+$textAlignValues: (
+    center,
+    left,
+    right,
+    justify,
+    start,
+    end,
+    inherit,
+    initial,
+    revert,
+    unset,
+);
+@each $val in $textAlignValues{
+    .text-#{$val}{
+        text-align: $val;
+    }
+}
+
 $overflowValues: (
     auto, 
     visible,
@@ -411,6 +429,8 @@ $pointerEventsItems: (
 }
 
 // 描述子级容器
+@include c(center);
+@include c(text-center);
 @include c(h);
 @include c(hinline);
 @include c(v);

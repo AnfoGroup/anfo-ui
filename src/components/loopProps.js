@@ -11,10 +11,7 @@ export default {
         type: [String, Function],
         default: null,
     },
-    childrenKey: {
-        type: [String, Function],
-        default: 'children',
-    },
+    childrenKey: String,
     containerStyle: {
         type: [String, Object],
         default: ()=>({})
